@@ -1,0 +1,464 @@
+---
+title: "GG_DS"
+output: html_document
+date: "2025-09-07"
+---
+
+```{r}
+
+library(stringr)
+library(dplyr)
+library(data.table)
+library(tidyr)
+library(readr)
+
+#raw data
+data <- read.csv('C:\\Users\\Tomas\\Dropbox\\Aarhus\\PIPPET\\GG_online_study\\GG_DS_1\\data_GG_DS_205.csv')
+
+
+#preprocessing
+
+#remove unused columns
+data$TIME001 <- NULL
+data$TIME002<- NULL
+data$TIME003<- NULL
+data$TIME004<- NULL
+data$TIME005<- NULL
+data$TIME006<- NULL
+data$TIME007<- NULL
+data$TIME009<- NULL
+data$MAILSENT<- NULL
+data$LASTDATA<- NULL
+data$STATUS<- NULL
+data$FINISHED<- NULL
+data$Q_VIEWER<- NULL
+data$LASTPAGE<- NULL
+data$MAXPAGE<- NULL
+data$MISSING<- NULL
+data$MISSREL<- NULL
+
+
+data$TIME007
+data$CASE <- NULL
+data$SERIAL<- NULL
+data$REF<- NULL
+data$QUESTNNR<- NULL
+data$STARTED<- NULL
+data$IN02<- NULL
+data$IN06_01<- NULL
+data$MODE<- NULL
+
+
+demo <- read.csv('C:\\Users\\Tomas\\Dropbox\\Aarhus\\PIPPET\\GG_online_study\\GG_DS_1\\Demographics_205.csv')
+
+data$ID <- data$PI01_RV1
+
+ID_index <- match(data$ID, demo$Participant.id)
+
+data$age <- demo$Age[ID_index]
+
+data$sex <- demo$Sex[ID_index]
+
+data$residence <- demo$Country.of.residence[ID_index]
+data$nationality <- demo$Nationality[ID_index]
+
+# exclude participants that failed the attention check (n = 21)
+#get IDs of those who didn't pass attention checks
+AC_ID <- data$ID[data$AC01_01 < 95 | data$AC02_01 < 95]
+
+
+data <- data %>%
+  filter(!(AC01_01 < 95 | AC02_01 < 95))
+
+
+
+# Gold MSI musical training sub scale
+# reverse code first two items
+data$ME01_01 <- 8 - data$ME01_01
+data$ME01_02 <- 8 - data$ME01_02
+data$GMSI <- rowSums(data[ ,c(65:71)])
+
+data$ME01_01 <- NULL
+data$ME01_02 <- NULL
+data$ME02 <- NULL
+data$ME03 <- NULL
+data$ME04 <- NULL
+data$ME05 <- NULL
+data$ME06 <- NULL
+
+data$AC01_01 <- NULL
+data$AC02_01 <- NULL
+
+### convert IV and WM to long format separately
+
+
+
+# Pivot stim names
+stims_long <- data %>%
+  mutate(row_id = row_number()) %>%
+  pivot_longer(
+    cols = starts_with("IV01_"),
+    names_to = "stim_id",
+    values_to = "stims"
+  ) #%>%
+  #mutate(index = as.numeric(str_extract(stim_id, "(?<=_)\\d+")))
+
+#get correct WM-stim pairs
+WM_stim_key <- read.csv('C:\\Users\\Tomas\\Dropbox\\Aarhus\\PIPPET\\GG_online_study\\GG_DS_1\\WM_stim.csv')
+WM_stim_key$stims <- gsub('.mp3', '', WM_stim_key$MP3)
+stims_index <- match(stims_long$stims, WM_stim_key$MP3)
+
+stims_long$WM <- WM_stim_key$ID[stims_index]
+
+
+# delete rows with attention checks    
+stims_long <- stims_long[!(stims_long$stims == 'attention_check.mp3'),]
+
+
+
+# Pivot ratings
+ratings_long <- data %>%
+  mutate(row_id = row_number()) %>%
+  pivot_longer(
+    cols = matches("^WM\\d+_01"),
+    names_to = "rating_id",
+    values_to = "ratings"
+  ) %>%
+  mutate(index = parse_number(rating_id))
+
+#align ratings to stims
+
+ratings_long$rating_id <- gsub('_01', '', ratings_long$rating_id)
+stims_long$WM_temp <- ratings_long$rating_id
+stims_long$ratings_temp <- ratings_long$ratings
+
+
+df <- stims_long %>%
+  group_by(ID) %>%
+  mutate(
+    # Create a lookup table for WM_temp -> ratings_temp
+    ratings_corrected = {
+      lookup <- setNames(ratings_temp, WM_temp)
+      lookup[WM]  # realign based on correct WM
+    }
+  ) %>%
+  ungroup()
+
+df <- df[, c("ID", 'stims', 'ratings_corrected', 'GMSI', 'TIME_SUM', 'TIME008','TIME_RSI','age', 'sex', 'residence', 'nationality')]
+
+#df_check <- df_try %>% select(PI01_RV1, stims, WM, ratings, ratings_corrected)
+
+
+
+#setnames(df,'PI01_RV1','ID')
+setnames(df, 'ratings_corrected', 'ratings')
+
+#df$ID <- factor(df$ID)
+
+df$measure <- factor(substr(df$stims, start = 1, stop = 2))
+
+df <- as.data.frame(df)
+
+df$stims <- gsub('.mp3', '', df$stims)
+
+#load stim info
+DS_df <- read.csv('C:\\Users\\Tomas\\Dropbox\\Aarhus\\PIPPET\\groovegen_ds\\DS_rhythmInfo_30.csv')
+SI_df <- read.csv('C:\\Users\\Tomas\\Dropbox\\Aarhus\\PIPPET\\groovegen_ds\\SI_rhythmInfo_30.csv')
+
+stim_df <- rbind(DS_df,SI_df)
+
+stim_df$deltaSurp_z <- scale(stim_df$deltaSurp)
+stim_df$syncIndex_z <- scale(stim_df$syncIndex)
+
+df$syncIndex <- NA
+df$deltaSurp <- NA
+df$syncIndex_z <- NA
+df$deltaSurp_z <- NA
+
+ind_match <- match(df$stims, stim_df$name)
+
+df$syncIndex <- stim_df$syncIndex[ind_match] 
+df$deltaSurp <- stim_df$deltaSurp[ind_match]
+df$syncIndex_z <- stim_df$syncIndex_z[ind_match] 
+df$deltaSurp_z <- stim_df$deltaSurp_z[ind_match]
+
+#df$stim2 <- stim_df$name[ind_match]
+
+
+
+#write.csv(stim_df, 'C:\\Users\\Tomas\\Dropbox\\Aarhus\\PIPPET\\groovegen_ds\\rhythmInfo_60.csv',row.names = FALSE)
+
+```
+
+
+
+find those with low variability in their ratings
+```{r}
+
+df <- df %>%
+  group_by(ID) %>%
+  mutate(SD_ratings = sd(ratings)) %>%
+  ungroup()
+
+
+
+
+df_ID<- df %>%
+  group_by(ID, GMSI,TIME_SUM, SD_ratings) %>%
+  #summarise_at(c('move_ratings', 'pleas_ratings'), mean, na.rm = FALSE)
+  summarise(ratings = mean(ratings)) %>%
+  ungroup()
+
+df_ID <- as.data.frame(df_ID)
+     
+hist(df_ID$SD_ratings)
+
+df_ID$sd_ratings_z <- scale(df_ID$SD_ratings)[,]
+
+hist(df_ID$sd_ratings_z)
+
+low_var <- df_ID$ID[df_ID$sd_ratings_z < -2]
+
+low_var
+```
+per participant plot
+
+```{r fig.width = 15, fig.height =20}
+library(ggplot2)
+ggplot(df, aes(x = deltaSurp, y= ratings))+
+  facet_wrap(~ID, nrow = 23)+
+  geom_point()+
+  geom_smooth(method = "lm", formula = y ~ x, se = FALSE)+
+  ylab("Wanting to Move")+xlab("Delta Surprisal")
+
+
+# ggplot(df, aes(x = syncIndex, y= ratings))+
+#   facet_wrap(~ID)+
+#   geom_point()+
+#   geom_smooth(method = "lm", formula = y ~ poly(x,2), se = FALSE)+
+#   ylab("Wanting to Move")+xlab("Syncopation")
+
+```
+
+remove bads (based on low variability and previous plots)
+
+```{r}
+
+
+badList = c("5d55d43e25dd4c00174122dc", "65a6bb1801ef84544cc6760d", "676578b520552faa04a8ef83",'60ebfc77',  '669c1e1f')
+
+
+df1 <- df %>% 
+    filter(!(str_detect(ID, pattern = paste(badList, collapse = '|'))))
+
+df1$age <- as.numeric(df1$age)
+
+#write.csv(df1, 'C:\\Users\\Tomas\\Dropbox\\Aarhus\\PIPPET\\GG_online_study\\GG_DS_1\\df_60.csv',row.names = FALSE)
+
+
+df1 <- df1 %>%
+  group_by(ID) %>%
+  mutate(ratings_z = scale(ratings)[,], 
+         index = seq(60)) %>%
+  ungroup()
+
+df_ID2 <- df1 %>%
+  group_by(ID, GMSI, age, sex, TIME_SUM, residence, nationality) %>%
+  #summarise_at(c('move_ratings', 'pleas_ratings'), mean, na.rm = FALSE)
+  summarise(ratings = mean(ratings)) %>%
+  ungroup()
+
+df_ID2$sex <- factor(df_ID2$sex)
+df_ID2$residence <-factor(df_ID2$residence)
+df_ID2$nationality <- factor(df_ID2$nationality)
+
+
+
+
+summary(df_ID2)
+```
+
+
+```{r}
+
+
+hist(df1$age)
+
+hist(df1$GMSI)
+hist(df1$ratings)
+
+
+
+
+```
+
+
+
+
+
+analysis
+
+Delta surprisal 
+```{r}
+library(lme4)
+library(lmerTest)
+
+
+df1 <- data.frame(df1)
+
+m1 <- lmer(ratings_z~deltaSurp*GMSI*measure*age + (0+deltaSurp|ID), data = df1)
+
+anova(m1, ddf="Kenward-Roger")
+
+summary(m1, correl =FALSE)
+
+
+```
+refit with only interaction between delta surp and age 
+for reporting estimates
+```{r}
+m1.1 <- lmer(ratings_z~deltaSurp*age + (0+deltaSurp|ID), data = df1)
+
+#anova(m1.1)
+summary(m1.1, correl =FALSE,ddf="Kenward-Roger")
+
+
+
+```
+diagnostic plots
+```{r message = FALSE}
+library(car)
+
+#Diagnostic plots
+qqPlot(resid(m1)) 
+hist(resid(m1)) 
+
+#Homoscedasticity and linearity
+
+# Fitted vs. residual plot (linearity)
+plot(m1, type = c('p', 'smooth'))
+
+# Scale-location plot (homoscedasticity)
+plot(m1, sqrt(abs(resid(.))) ~ fitted(.), type = c("p", "smooth"))
+
+# Observed versus fitted values by Version
+plot(m1, ratings ~ fitted(.) | measure, abline = c(0,1))
+```
+
+
+
+syncIndex
+```{r}
+m2 <- lmer(ratings_z~syncIndex*GMSI*measure*age + (0+syncIndex|ID), data = df1)
+
+anova(m2, ddf="Kenward-Roger")
+
+summary(m2, correl =FALSE)
+
+#apparently no per-participant variabilty in sync index slope, but leave model as is to match delta surp model
+```
+
+
+
+
+diagnostic plots
+
+```{r message = FALSE}
+#Diagnostic plots
+qqPlot(resid(m2)) 
+hist(resid(m2)) 
+
+#Homoscedasticity and linearity
+
+# Fitted vs. residual plot (linearity)
+plot(m2, type = c('p', 'smooth'))
+
+# Scale-location plot (homoscedasticity)
+plot(m2, sqrt(abs(resid(.))) ~ fitted(.), type = c("p", "smooth"))
+
+# Observed versus fitted values by Version
+plot(m2, ratings ~ fitted(.) | measure, abline = c(0,1))
+```
+
+
+follow up model
+```{r}
+m2.2 <- lmer(ratings_z~syncIndex + (0+syncIndex|ID), data = df1)
+
+#anova(m2.2)
+
+summary(m2.2, correl =FALSE, ddf="Kenward-Roger")
+
+```
+
+
+does delta surp improve model fit over syncIndex
+```{r}
+m3 <- lmer(ratings_z ~ syncIndex_z + 
+             (0 + syncIndex_z|ID) + (0 + deltaSurp_z|ID), data = df1,
+           control = lmerControl(optimizer = "nlminbwrap", calc.derivs = FALSE))
+
+m3.1 <- lmer(ratings_z~ syncIndex_z + deltaSurp_z +
+             (0 + syncIndex_z|ID) + (0+ deltaSurp_z|ID), data = df1,
+           control = lmerControl(optimizer = "nlminbwrap", calc.derivs = FALSE))
+
+anova(m3, m3.1)
+
+anova(m3.1)
+summary(m3.1, correl = FALSE)
+```
+main plots
+```{r}
+#both measures in same df 
+
+df_longer <- df1 %>% pivot_longer(
+    cols = c("deltaSurp_z", 'syncIndex_z'),
+    names_to = "measure2",
+    values_to = "values")
+
+
+measLabels =list('deltaSurp_z' = expression(Delta*" Surprisal (z)"), 'syncIndex_z' ='Syncopation (z)')
+meas_labeller <- function(variable,value){
+  return(measLabels[value])
+}
+
+#tiff(file="C:\\Users\\Tomas\\Dropbox\\Aarhus\\PIPPET\\GG_online_study\\GG_DS_1\\DS_SI_meas.tiff", units = 'in', res = 300,width=8, height =4)
+ggplot(df_longer, aes(x = values, y= ratings_z, group = measure, colour = measure))+
+  facet_grid(~measure2, labeller = meas_labeller)+
+  #geom_point()+
+  #geom_rug(sides="b")+
+  geom_smooth(method = "lm", formula = y ~ x)+
+  labs(y = "Wanting to Move (z)", x  = NULL)+
+  scale_colour_manual(labels = c('Set 1', 'Set 2'), values = c('black', 'grey60'))+
+  theme_classic()+
+  theme(axis.text=element_text(size=18), # extra big text!
+        axis.title=element_text(size=24),
+        strip.text = element_text(size = 18),
+        strip.background = element_rect(colour="white", fill="white"),
+        legend.title = element_blank(),
+        legend.text = element_text(size = 14))
+#dev.off()
+
+
+library(interactions)
+#tiff(file="C:\\Users\\Tomas\\Dropbox\\Aarhus\\PIPPET\\GG_online_study\\GG_DS_1\\DS_age.tiff", units = 'in', res = 300,width=5, height =4)
+Int<-interact_plot(m1.1, pred = deltaSurp, modx = age,
+modx.values = c( round(mean(df_ID2$age) - sd(df_ID2$age),2), round(mean(df_ID2$age),2), round(mean(df_ID2$age) + sd(df_ID2$age),2)), 
+#modx.labels = c('Low', 'Medium', 'High'),
+                   #mod2 = ic_sum_s,mod2.values = c(icLow, icMedium, icHigh),
+                     vary.lty = FALSE,  legend.main = 'Age', colors = 'Rainbow',
+                   interval = TRUE, line.thickness = 1)
+Int +
+ # geom_point(data = meansstim, aes(x = sync_index, y = groove_ratings, group = group, colour = group))+
+  #ylim(.5,5.5)+
+  labs(y = "Wanting to Move (z)", x = expression(Delta*" Surprisal"))+
+  theme_classic()+
+  guides(linetype = "none")+
+  theme(axis.text=element_text(size=18), # extra big text!
+        axis.title=element_text(size=24),
+        legend.title = element_text(size=18),
+        legend.text = element_text(size = 12))
+
+#dev.off()
+```
+

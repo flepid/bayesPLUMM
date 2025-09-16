@@ -1,0 +1,107 @@
+---
+title: "GG_DS_1_fits"
+output: html_document
+date: "2025-07-18"
+---
+
+```{r}
+data <- read.csv('C:\\Users\\Tomas\\Dropbox\\Aarhus\\PIPPET\\GG_online_study\\GG_DS_1\\fit_results.csv')
+
+#get age and GSMI from demo
+demo <- read.csv('C:\\Users\\Tomas\\Dropbox\\Aarhus\\PIPPET\\GG_online_study\\GG_DS_1\\Demographics_205.csv')
+
+
+
+ID_index <- match(data$participant, demo$Participant.id)
+
+data$age <- demo$Age[ID_index]
+
+data$age <- as.numeric(data$age)
+
+#data$sex <- demo$Sex[ID_index]
+
+#get ratings
+df_ratings <- read.csv('C:\\Users\\Tomas\\Dropbox\\Aarhus\\PIPPET\\GG_online_study\\GG_DS_1\\df_ratings.csv')
+
+ID_index2 <- match(data$participant, df_ratings$ID)
+data$GMSI <- df_ratings$GMSI[ID_index2]
+
+#rescale spread to 0-1 and reverse
+data$spread_s <- 1 - ((data$spread - min(data$spread)) / (max(data$spread) - min(data$spread)))
+```
+
+```{r}
+library(ggplot2)
+#hist(data$k)
+#hist(data$spread)
+hist(data$m)
+hist(data$b)
+
+hist(data$rmse_fit)
+
+#tiff(file="C:\\Users\\Tomas\\Dropbox\\Aarhus\\PIPPET\\GG_online_study\\GG_DS_1\\K_hist.tiff", units = 'in', res = 300,width=5, height =4)
+ggplot(data,aes(x = k))+
+  geom_histogram(binwidth = .05, colour="black")+
+  labs(y = 'Count', x = expression(italic(P[switch])))+
+  theme_classic()+
+  theme(axis.text=element_text(size=12),
+        axis.title=element_text(size=24),
+        plot.title=element_text(size=24, hjust = 0.5))
+#dev.off()
+
+#tiff(file="C:\\Users\\Tomas\\Dropbox\\Aarhus\\PIPPET\\GG_online_study\\GG_DS_1\\spread_hist.tiff", units = 'in', res = 300,width=5, height =4)
+ggplot(data,aes(x = spread_s))+
+  geom_histogram(binwidth = .05, colour="black")+
+  labs(y = 'Count', x = expression(italic(C)))+
+  theme_classic()+
+  theme(axis.text=element_text(size=12),
+        axis.title=element_text(size=24),
+        plot.title=element_text(size=24, hjust = 0.5))
+#dev.off()
+
+
+```
+
+
+
+
+```{r}
+df_pred <- read.csv('C:\\Users\\Tomas\\Dropbox\\Aarhus\\PIPPET\\GG_online_study\\GG_DS_1\\predRatings_orig.csv')
+
+df_pred$Complexity <- NA
+df_pred$Complexity[df_pred$syncIndex == 0 ] <- 'Low'
+df_pred$Complexity[df_pred$syncIndex == 3 | df_pred$syncIndex == 4 | df_pred$syncIndex == 6] <- 'Medium'
+df_pred$Complexity[df_pred$syncIndex == 15 | df_pred$syncIndex == 16 | df_pred$syncIndex == 18] <- 'High'
+
+df_pred$Complexity <- factor(df_pred$Complexity, levels = c('Low', 'Medium', 'High'))
+
+ggplot(df_pred, aes(x = Complexity, y = simMoveScore))+
+  #facet_wrap(~group)+
+  geom_boxplot()+
+  #scale_fill_manual('Harmonic\nComplexity',  values = c( "grey35", 'grey65', 'grey90'))+
+  #geom_jitter(size = 1,alpha = .1,position = position_dodge(.75))+
+  stat_summary(colour = "black", fun = mean, position = position_dodge(.75)) +
+  ylab("Predicted Ratings")+
+  scale_x_discrete("Rhythmic Complexity")+
+  theme_classic()+
+  theme(strip.text = element_text(size = 18),
+        strip.background = element_rect(colour="white", fill="white"),
+        axis.text=element_text(size=18),
+        axis.title=element_text(size=24),
+        legend.title = element_text(size = 24), #with legend
+        legend.text = element_text(size = 18))
+
+#tiff(file="C:\\Users\\Tomas\\Dropbox\\Aarhus\\PIPPET\\GG_online_study\\GG_DS_1\\pred_TM.tiff", units = 'in', res = 300,width=5, height =4)
+ggplot(df_pred, aes(x = Complexity, y = simMoveScore)) +
+  stat_summary(fun = mean, geom = "point", size = 3, color = "darkgreen") +
+  stat_summary(fun.data = mean_se, geom = "errorbar", size = 1,width = 0, color = "darkgreen") +
+  stat_summary(fun = mean, geom = "line", aes(group = 1), color = "darkgreen", size = 1.5) +
+  
+  labs(x = "Rhythmic Complexity", y = 'Predicted Ratings') +
+  theme_classic()+
+  theme(
+    axis.title = element_text(size = 24),
+    axis.text = element_text(size = 18)
+  ) 
+#dev.off()
+```
