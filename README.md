@@ -9,3 +9,6 @@ Note: model parameters have different names in the code and the manuscript: spre
 The ratingStudy folder contains code for generating the rhythmic patterns (groovegen_ds.py), for analyzing the ratings (GG_DS_1_ratings.Rmd), for fitting the switch and contrast parameters to the ratings (GG_DS_paramFit.py) and for plotting the resulting fits (GG_DS_1.1.Rmd)
 
 Note: groovegen_ds.py relies heavily on customized versions of functions from the groovegenerator package. The original package is found here https://github.com/OleAd/GrooveGenDist. I will upload the custom scripts ASAP. 
+
+
+Data files can be found here: https://osf.io/qjn6y/files/osfstorage
