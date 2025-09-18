@@ -12,4 +12,4 @@ The **ratingStudy** folder contains code for generating the rhythmic patterns (g
 Note: groovegen_ds.py relies heavily on customized versions of functions from the groovegenerator package. The original package is found here https://github.com/OleAd/GrooveGenDist. I will upload the custom versions of those scripts ASAP. 
 
 
-Data files can be found here: https://osf.io/qjn6y/files/osfstorage
+Data files can be found here: 10.17605/OSF.IO/QJN6Y
