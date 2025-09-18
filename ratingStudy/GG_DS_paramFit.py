@@ -363,9 +363,7 @@ resDf.to_csv('...\\fit_results.csv')
 
 params  = pd.read_csv('...\\fit_results.csv')
 
-
-stims = getStims(chords = True)
-
+stims = getStims.getStims(stimSet = 'chords1', reps = 4)
 
 dictList = []
 
@@ -394,5 +392,6 @@ for row in params.index:
 dfsurps = pd.DataFrame(dictList)
 
 dfsurps.to_csv('...\\predRatings_orig.csv')
+
 
 
