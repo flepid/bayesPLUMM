@@ -3,9 +3,9 @@
 Created on Mon May 13 14:49:41 2024
 
 @author: Tomas
+
+Generate plots for manuscript
 """
-import os
-os.chdir('C:\\Users\\Tomas\\Dropbox\\Aarhus\\PIPPET\\Scripts')
 
 import numpy as np
 import pandas as pd
@@ -18,7 +18,9 @@ from deltaSurp_s import deltaSurp
 import getStims
 
 
-
+#%%------------
+# generate dataframe with surprisal, delta surprisal etc, for each rhythm
+#----------------
 
 #load stims
 stims = getStims.getStims(stimSet = 'chords1', reps = 1)
@@ -62,9 +64,9 @@ dfm_long = pd.melt(dfm, id_vars=['Syncopation', 'syncIndex', 'rhythm', 'spread',
                             'granularity','k', 'pattern'], var_name='Type', value_name='Surprisal', 
               value_vars=['Stimulus', 'Stimulus + Metronome', 'Difference raw', 'Difference (scaled)'])
 
-
-#%% suprisal, raw delta surprisal plots for orig rhythms
-
+#%%------------------------
+# suprisal, raw delta surprisal plots for orig rhythms
+#----------------------------------
 
 
 #surprisal, with and without metronome, plus delta surp
@@ -95,13 +97,13 @@ ax2.tick_params(left=False, bottom = False, labelsize = 12)
 
 fig.tight_layout()
 
-plt.savefig('C:\\Users\\Tomas\\Dropbox\\Aarhus\\PIPPET\\Manuscripts\\Annals\\Figures\\Final- Revision 2\\surp_deltaSurp2.png', dpi = 300)
+#plt.savefig(...)
 #plt.show()
 
 
-
-#%%deltasurp or simMoveScore over various combinations of k and spread
-
+#%%------------
+# deltasurp or simMoveScore over various combinations of k and spread
+#---
 
 
 cs = sns.color_palette('Set1', 3)
@@ -118,10 +120,11 @@ for(a,b) in product(ks, spreads):
     plt.xlabel('Rhythmic Complexity', fontsize=18)
     plt.tight_layout() 
     plt.show()
-    #plt.savefig('C:\\Users\\Tomas\\Dropbox\\Aarhus\\PIPPET\\Manuscripts\\Annals\\Figures\\Pieces\\spread_k\\deltaSurp'+ str(round(a,2)) + '_' + str(round(b,2)) + '.png', dpi = 300)
+    #plt.savefig(...)
 
-
-#%% mean surprisal  over various combinations of k and spread
+#%%----------------
+# mean surprisal  over various combinations of k and spread
+#-------------
 
 dfm_long2 = dfm_long[~dfm_long['Type'].str.contains('Difference')]
 
@@ -139,12 +142,14 @@ for(a,b) in product(ks, spreads):
     plt.xlabel('Rhythmic Complexity', fontsize=18)
     plt.tight_layout() 
     #plt.show()
-    plt.savefig('C:\\Users\\Tomas\\Dropbox\\Aarhus\\PIPPET\\Manuscripts\\Annals\\Figures\\Pieces\\spread_k\\meanSurp'+ str(round(a,2)) + '_' + str(round(b,2)) + '.png', dpi = 300)
+    #plt.savefig(...)
 
 
 
+#%%------------------------
+# set up df for rhythm and raw plots
+# -------------------
 
-#%% set up df for rhythm and raw plots
 dfm['pattern2'] = ' '
 dfm['pattern2'] = dfm['pattern2'].astype(object)
 
@@ -164,18 +169,15 @@ df_exploded.pattern3[df_exploded.pattern3 >= 1] = 0
 
 df_exploded['timeStep'] = np.tile(np.arange(32)+1, nStim)
 
+#%% -------------
+# set up posterior and suprisal plots
+# -------------------
 
-#%% set up posterior and suprisal plots
 # only need one rhythm per complexity so subset df
-
-
-
 
 indices = [0,3,8]
 
 df1 = df_exploded[df_exploded.index.isin(indices)]
-
-
 
 #arrays for strong and weak beats
 qbeat = np.arange(0,129,8) #quarter notes
@@ -191,7 +193,9 @@ metronome[metronome == 0] = -2
 metronome[metronome > 0] = 0
 df1['Metronome'] = np.tile(metronome,len(indices))
 
-#%% posteriors without metronome
+#%%-----------
+# posteriors without metronome
+#-----------------
 
 nSteps = len(df1.postMet_nMetro[df1.Syncopation == 'Low'].iloc[0])
 
@@ -250,10 +254,12 @@ fig.suptitle('Stimulus', fontsize = 24, x = .55)
 
 fig.tight_layout()
 
-plt.savefig('C:\\Users\\Tomas\\Dropbox\\Aarhus\\PIPPET\\Manuscript\\Final Figures\\raw_posts_Surps\\post_stim.png', dpi = 300)
+#plt.savefig(...)
 
 
-#%% posteriors with metronome
+#%% ------------------------ 
+# posteriors with metronome
+# ---------------
 
 nSteps = len(df1.postMet_Metro[df1.Syncopation == 'Low'].iloc[0])
 
@@ -323,12 +329,12 @@ fig.suptitle('Stimulus + Metronome', fontsize = 24, x = .55)
 fig.tight_layout()
 
 #plt.show()
-plt.savefig('C:\\Users\\Tomas\\Dropbox\\Aarhus\\PIPPET\\Manuscript\\Final Figures\\raw_posts_Surps\\post_stimMet.png', dpi = 300)
+#plt.savefig(...)
 
 
-
-
-#%% surprisal plot without metronome
+#%% ------------------ 
+# surprisal plot without metronome
+# ----------------------
 
 nSteps = len(df1.surprisal_nMetro[df1.Syncopation == 'Low'].iloc[0])
 
@@ -381,11 +387,12 @@ ax3.set_xlabel('Time Step', fontsize = 16)
 ax3.tick_params(axis='both',  pad=.002)
 
 fig.tight_layout()
+#plt.savefig(...)
 
 
-plt.savefig('C:\\Users\\Tomas\\Dropbox\\Aarhus\\PIPPET\\Manuscript\\Final Figures\\raw_posts_Surps\\surp_stim.png', dpi = 300)
-
-#%% surprisal plot with metronome
+#%%-------------- 
+# surprisal plot with metronome
+#----------------
 
 nSteps = len(df1.surprisal_Metro[df1.Syncopation == 'Low'].iloc[0])
 
@@ -449,10 +456,12 @@ ax3.tick_params(axis='both',  pad=.002)
 ax3.set_xlabel('Time Step', fontsize = 16)
 
 fig.tight_layout()
-plt.savefig('C:\\Users\\Tomas\\Dropbox\\Aarhus\\PIPPET\\Manuscript\\Final Figures\\raw_posts_Surps\\surp_stimMet.png', dpi = 300)
+#plt.savefig(...)
 
 
-#%% rhythm schematics
+#%%------------------------ 
+#rhythm schematics
+#--------
 
 df_exploded = df_exploded.sort_values('syncIndex', ascending=True, ignore_index = True)
 
@@ -479,13 +488,16 @@ plt.vlines(x = [4,12,20,28], ymin = 0.8, ymax = 9.2, ls = '-',colors = 'grey')
 plt.vlines(x = [2,6,10,14,18,22,26,30], ymin = 0.8, ymax = 9.2, ls = '-',lw = .5, colors = 'grey')
 r1.grid(False)
 
-
 plt.tight_layout()
-plt.savefig('C:\\Users\\Tomas\\Dropbox\\Aarhus\\PIPPET\\Manuscript\\Final Figures\\TMrhythm_schem3.png', dpi = 300)
+#plt.savefig(...)
 #plt.show()
 
-#%% template plots
 
+#%% ------------------
+# template plots
+#------------------------------
+
+#metric template
 maxWeights = np.array([.9,.1,.3,.1,.5,.1,.3,.1,.7,.1,.3,.1,.5,.1, .3,.1,.8,.1,.3,.1,.5,.1,.3,.1,.7,.1,.3,.1,.5,.1,.3,.1 ])
 
 fig, ax = plt.subplots(figsize = ( 5 , 4 ))
@@ -500,11 +512,9 @@ plt.ylim(0,1)
 #ax.set_ylabel('$P(onset)$', fontsize = 18)
 #ax.set_xlabel('Time Step', fontsize = 18)
 plt.tight_layout() 
-#plt.show()
-plt.savefig('C:\\Users\\Tomas\\Dropbox\\Aarhus\\PIPPET\\Manuscripts\\Annals\\Figures\\Pieces\\Graphical_abstract\\meterTemplate_clean.png', dpi = 300)
+#plt.show(...)
 
-
-
+#Uniform template
 uniWeights = np.tile(mean(maxWeights), len(maxWeights))
 
 fig, ax = plt.subplots(figsize = ( 5 , 4 ))
@@ -523,9 +533,9 @@ plt.tight_layout()
 plt.savefig('C:\\Users\\Tomas\\Dropbox\\Aarhus\\PIPPET\\Manuscripts\\Annals\\Figures\\Pieces\\Graphical_abstract\\unmeterTemplate_clean.png', dpi = 300)
 
 
-#%% raw posterior  without detail (for GA)
-#from matplotlib.colors import ListedColormap
-#my_cmap = ListedColormap(sns.color_palette('Set1', 3).as_hex())
+#%%-----------
+# raw posterior without detail (for Graphical Abstract)
+# ------------------
 
 cs = sns.color_palette('Set1', 3)
 
@@ -542,9 +552,13 @@ ax.set_yticklabels([])
 plt.ylim(0,1)
 #plt.show()
 plt.tight_layout()
-plt.savefig('C:\\Users\\Tomas\\Dropbox\\Aarhus\\PIPPET\\Manuscripts\\Annals\\Figures\\Pieces\\Graphical_abstract\\rawPost_Medium.png', dpi = 300)
+#plt.savefig(...)
 
-#%% raw surprisal  without detail (for GA)
+
+#%%---------------- 
+#raw surprisal  without detail (for GA)
+#----------
+
 fig = plt.figure()
 fig, ax = plt.subplots(figsize = ( 5 , 4 ))
 #ax = fig.add_axes([0.1,0.1,0.75,0.75])
@@ -558,5 +572,6 @@ ax.set_yticklabels([])
 plt.ylim(0,2)
 #plt.show()
 plt.tight_layout()
-plt.savefig('C:\\Users\\Tomas\\Dropbox\\Aarhus\\PIPPET\\Manuscripts\\Annals\\Figures\\Pieces\\Graphical_abstract\\rawSurp_High.png', dpi = 300)
+#plt.savefig(...)
+
 
