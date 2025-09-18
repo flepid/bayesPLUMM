@@ -4,11 +4,15 @@ output: html_document
 date: "2025-07-18"
 ---
 
+generates plots of results of parameter fitting
+
+
+load and process files
 ```{r}
-data <- read.csv('C:\\Users\\Tomas\\Dropbox\\Aarhus\\PIPPET\\GG_online_study\\GG_DS_1\\fit_results.csv')
+data <- read.csv('...\\fit_results.csv')
 
 #get age and GSMI from demo
-demo <- read.csv('C:\\Users\\Tomas\\Dropbox\\Aarhus\\PIPPET\\GG_online_study\\GG_DS_1\\Demographics_205.csv')
+demo <- read.csv('...\\Demographics_205.csv')
 
 
 
@@ -21,7 +25,7 @@ data$age <- as.numeric(data$age)
 #data$sex <- demo$Sex[ID_index]
 
 #get ratings
-df_ratings <- read.csv('C:\\Users\\Tomas\\Dropbox\\Aarhus\\PIPPET\\GG_online_study\\GG_DS_1\\df_ratings.csv')
+df_ratings <- read.csv('...\\df_ratings.csv')
 
 ID_index2 <- match(data$participant, df_ratings$ID)
 data$GMSI <- df_ratings$GMSI[ID_index2]
@@ -30,6 +34,8 @@ data$GMSI <- df_ratings$GMSI[ID_index2]
 data$spread_s <- 1 - ((data$spread - min(data$spread)) / (max(data$spread) - min(data$spread)))
 ```
 
+
+generate histograms of constrast and p_switch values
 ```{r}
 library(ggplot2)
 #hist(data$k)
@@ -39,7 +45,7 @@ hist(data$b)
 
 hist(data$rmse_fit)
 
-#tiff(file="C:\\Users\\Tomas\\Dropbox\\Aarhus\\PIPPET\\GG_online_study\\GG_DS_1\\K_hist.tiff", units = 'in', res = 300,width=5, height =4)
+#tiff(file="...\\K_hist.tiff", units = 'in', res = 300,width=5, height =4)
 ggplot(data,aes(x = k))+
   geom_histogram(binwidth = .05, colour="black")+
   labs(y = 'Count', x = expression(italic(P[switch])))+
@@ -49,7 +55,7 @@ ggplot(data,aes(x = k))+
         plot.title=element_text(size=24, hjust = 0.5))
 #dev.off()
 
-#tiff(file="C:\\Users\\Tomas\\Dropbox\\Aarhus\\PIPPET\\GG_online_study\\GG_DS_1\\spread_hist.tiff", units = 'in', res = 300,width=5, height =4)
+#tiff(file="...\\spread_hist.tiff", units = 'in', res = 300,width=5, height =4)
 ggplot(data,aes(x = spread_s))+
   geom_histogram(binwidth = .05, colour="black")+
   labs(y = 'Count', x = expression(italic(C)))+
@@ -64,9 +70,9 @@ ggplot(data,aes(x = spread_s))+
 
 
 
-
+plot predicted ratings
 ```{r}
-df_pred <- read.csv('C:\\Users\\Tomas\\Dropbox\\Aarhus\\PIPPET\\GG_online_study\\GG_DS_1\\predRatings_orig.csv')
+df_pred <- read.csv('...\\predRatings_orig.csv')
 
 df_pred$Complexity <- NA
 df_pred$Complexity[df_pred$syncIndex == 0 ] <- 'Low'
@@ -91,7 +97,7 @@ ggplot(df_pred, aes(x = Complexity, y = simMoveScore))+
         legend.title = element_text(size = 24), #with legend
         legend.text = element_text(size = 18))
 
-#tiff(file="C:\\Users\\Tomas\\Dropbox\\Aarhus\\PIPPET\\GG_online_study\\GG_DS_1\\pred_TM.tiff", units = 'in', res = 300,width=5, height =4)
+#tiff(file="...\\pred_orig.tiff", units = 'in', res = 300,width=5, height =4)
 ggplot(df_pred, aes(x = Complexity, y = simMoveScore)) +
   stat_summary(fun = mean, geom = "point", size = 3, color = "darkgreen") +
   stat_summary(fun.data = mean_se, geom = "errorbar", size = 1,width = 0, color = "darkgreen") +
@@ -104,4 +110,5 @@ ggplot(df_pred, aes(x = Complexity, y = simMoveScore)) +
     axis.text = element_text(size = 18)
   ) 
 #dev.off()
+
 ```
