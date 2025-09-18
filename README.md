@@ -1,6 +1,9 @@
 # bayesPLUMM
-Code for project investigating the urge to move to music as active inference
-Analysis and plot for the manuscript under review at the Annals of the New York Academy of Sciences
+Code for project investigating the urge to move to music as active inference.
+Includes code for analyses and plots in manuscript under review at the Annals of the New York Academy of Sciences entitled 'An active inference model of meter perception and the urge to move to music'
+
+Tomas E. Matthews a*, Peter Vuust a,b, & Jonathan Cannon c
+
 
 The **bayesPLUMM_model** folder contains code for the model (bayesPLUMM_deltaSurp.py), the rhythmic patterns (bayesPLUMM_chordRhythm_stimuli.py), accessing the rhythmic patterns (bayesPLUMM_getStims.py), and making the plots in the manuscript (bayes_PLUMM_plots.py
 
