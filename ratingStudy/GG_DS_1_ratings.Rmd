@@ -13,7 +13,7 @@ library(tidyr)
 library(readr)
 
 #raw data
-data <- read.csv('C:\\Users\\Tomas\\Dropbox\\Aarhus\\PIPPET\\GG_online_study\\GG_DS_1\\data_GG_DS_205.csv')
+data <- read.csv('...\\data_GG_DS_205.csv')
 
 
 #preprocessing
@@ -49,7 +49,7 @@ data$IN06_01<- NULL
 data$MODE<- NULL
 
 
-demo <- read.csv('C:\\Users\\Tomas\\Dropbox\\Aarhus\\PIPPET\\GG_online_study\\GG_DS_1\\Demographics_205.csv')
+demo <- read.csv('...\\Demographics_205.csv')
 
 data$ID <- data$PI01_RV1
 
@@ -104,7 +104,7 @@ stims_long <- data %>%
   #mutate(index = as.numeric(str_extract(stim_id, "(?<=_)\\d+")))
 
 #get correct WM-stim pairs
-WM_stim_key <- read.csv('C:\\Users\\Tomas\\Dropbox\\Aarhus\\PIPPET\\GG_online_study\\GG_DS_1\\WM_stim.csv')
+WM_stim_key <- read.csv('...\\GG_DS_1\\WM_stim.csv')
 WM_stim_key$stims <- gsub('.mp3', '', WM_stim_key$MP3)
 stims_index <- match(stims_long$stims, WM_stim_key$MP3)
 
@@ -162,8 +162,8 @@ df <- as.data.frame(df)
 df$stims <- gsub('.mp3', '', df$stims)
 
 #load stim info
-DS_df <- read.csv('C:\\Users\\Tomas\\Dropbox\\Aarhus\\PIPPET\\groovegen_ds\\DS_rhythmInfo_30.csv')
-SI_df <- read.csv('C:\\Users\\Tomas\\Dropbox\\Aarhus\\PIPPET\\groovegen_ds\\SI_rhythmInfo_30.csv')
+DS_df <- read.csv('...\\DS_rhythmInfo_30.csv')
+SI_df <- read.csv('...\\SI_rhythmInfo_30.csv')
 
 stim_df <- rbind(DS_df,SI_df)
 
@@ -186,13 +186,13 @@ df$deltaSurp_z <- stim_df$deltaSurp_z[ind_match]
 
 
 
-#write.csv(stim_df, 'C:\\Users\\Tomas\\Dropbox\\Aarhus\\PIPPET\\groovegen_ds\\rhythmInfo_60.csv',row.names = FALSE)
+#write.csv(stim_df, '...\\rhythmInfo_60.csv',row.names = FALSE)
 
 ```
 
 
 
-find those with low variability in their ratings
+find participants with low variability in their ratings
 ```{r}
 
 df <- df %>%
@@ -253,7 +253,7 @@ df1 <- df %>%
 
 df1$age <- as.numeric(df1$age)
 
-#write.csv(df1, 'C:\\Users\\Tomas\\Dropbox\\Aarhus\\PIPPET\\GG_online_study\\GG_DS_1\\df_60.csv',row.names = FALSE)
+#write.csv(df1, '...\\df_60.csv',row.names = FALSE)
 
 
 df1 <- df1 %>%
@@ -422,7 +422,7 @@ meas_labeller <- function(variable,value){
   return(measLabels[value])
 }
 
-#tiff(file="C:\\Users\\Tomas\\Dropbox\\Aarhus\\PIPPET\\GG_online_study\\GG_DS_1\\DS_SI_meas.tiff", units = 'in', res = 300,width=8, height =4)
+#tiff(file="...\\DS_SI_meas.tiff", units = 'in', res = 300,width=8, height =4)
 ggplot(df_longer, aes(x = values, y= ratings_z, group = measure, colour = measure))+
   facet_grid(~measure2, labeller = meas_labeller)+
   #geom_point()+
@@ -441,7 +441,7 @@ ggplot(df_longer, aes(x = values, y= ratings_z, group = measure, colour = measur
 
 
 library(interactions)
-#tiff(file="C:\\Users\\Tomas\\Dropbox\\Aarhus\\PIPPET\\GG_online_study\\GG_DS_1\\DS_age.tiff", units = 'in', res = 300,width=5, height =4)
+#tiff(file="...\\DS_age.tiff", units = 'in', res = 300,width=5, height =4)
 Int<-interact_plot(m1.1, pred = deltaSurp, modx = age,
 modx.values = c( round(mean(df_ID2$age) - sd(df_ID2$age),2), round(mean(df_ID2$age),2), round(mean(df_ID2$age) + sd(df_ID2$age),2)), 
 #modx.labels = c('Low', 'Medium', 'High'),
@@ -461,4 +461,5 @@ Int +
 
 #dev.off()
 ```
+
 
