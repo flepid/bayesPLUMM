@@ -3,11 +3,12 @@
 Created on Tue Jun 10 15:20:30 2025
 
 @author: Tomas
+
+uses the custom scripts based on the groove generator package to search for rhythmic patterns given delta surprisal values 
+or syncopation indices, within constraints
+
+generates are large number, which is then subsampled to get 30 per measure, covering their full range
 """
-
-
-import os
-os.chdir('C:\\Users\\Tomas\\Dropbox\\Aarhus\\PIPPET\\Scripts')
 
 
 import numpy as np
@@ -15,17 +16,13 @@ import pandas as pd
 import sys
 import re
 # caution: path[0] is reserved for script path (or '' in REPL)
-sys.path.insert(1, 'C:\\Users\\Tomas\\Documents\\GitHub\\GrooveGenDist-main\\groovegenerator')
+sys.path.insert(1, '...\\groovegenerator')
 
 import groovegenerator_t as ggt
 import syncIndex
 from deltaSurp_s import deltaSurp
 
-#%%--------------------------------
-
-#iteratively run searchPattern to find rhythms matching a set of levels of delta Surprisal
-
-outdir =  'C:\\Users\\Tomas\\Dropbox\\Aarhus\\PIPPET\\groovegen_ds\\'
+outdir =  '...\\'
 
 #DS
 #target_list = np.arange(-.045, .085, .0044)
@@ -68,14 +65,10 @@ def grooveGen(measure, target_list, granularity):
     m = 37.98172 #from initial scaling on young non-musicians, raw (1-5) ratings
     b = 2.617817
     
-    
     for i, target in enumerate(target_list):
-                    
-        
-        #x = 1
+                        
         print('looking for a pattern with ' + measure + ' = ' + str(target))
         
-         
         p, out, alpha, success = ggt.searchPattern_ds(measure = measure, target=target, granularity = granularity, timeout=1000, minSnare=5, maxSnare=5, verbose=True) 
         
         if granularity == 32:
@@ -88,8 +81,7 @@ def grooveGen(measure, target_list, granularity):
             print('Incorrect input for granularity')
         
         if p is not None: #if found a rhythm
-             #outList.append(out)
-            
+             
              onsets = p[1]
              nOnsets = sum(onsets)
              nList.append(nOnsets)
@@ -135,18 +127,23 @@ def grooveGen(measure, target_list, granularity):
     
     dfDict = pd.DataFrame(dsDict)
     
-    dfDict.to_csv('C:\\Users\\Tomas\\Dropbox\\Aarhus\\PIPPET\\groovegen_ds\\' + outName +'_rhythmInfo.csv', index = False)
-#%% copy subset of files to new folder
+    dfDict.to_csv('...' + outName +'_rhythmInfo.csv', index = False)
+
+
+
+#%%----------
+# get subset and copy to new folder
+# ----
+
 import shutil
 
-"""
-copies subset of wav and csv files in consecutive order, based on number of stims in subset 
-
-"""
-
 def copySubset(measure = 'SI', nStim = 30):
-    
-    homeDir = 'C:\\Users\\Tomas\\Dropbox\\Aarhus\\PIPPET\\groovegen_ds\\'
+    """
+    copies subset of wav and csv files in consecutive order, based on number of stims in subset 
+
+    assumes specific folder structure
+    """    
+    homeDir = '...\\'
     
     #load rhythm info csv
     info = pd.read_csv(homeDir + measure + '_rhythmInfo.csv')
@@ -176,12 +173,16 @@ def copySubset(measure = 'SI', nStim = 30):
         
     info_30 = info.iloc[index]
     
-    info_30.to_csv('C:\\Users\\Tomas\\Dropbox\\Aarhus\\PIPPET\\groovegen_ds\\' + measure +'_rhythmInfo_30.csv', index = False)
-#%% load DS_30 and SI_30 csvs and generate wavs with different medium chords
+    info_30.to_csv('...\\' + measure +'_rhythmInfo_30.csv', index = False)
+
+
+#%% -------------
+# load DS_30 and SI_30 csvs and generate wavs with different medium chords
+#---------------
 
 measure = 'SI'
 
-homeDir =  'C:\\Users\\Tomas\\Dropbox\\Aarhus\\PIPPET\\groovegen_ds\\'
+homeDir =  '...\\'
 
 csvDir = homeDir + 'CSVs_' + measure + '_30\\'
 outDir = homeDir + 'WAVs_' + measure + '_30\\'
@@ -196,4 +197,5 @@ for i in range(20, 30):
     
     
  
+
     
