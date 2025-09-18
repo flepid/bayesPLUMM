@@ -8,12 +8,13 @@ parameter fitting code based on that from Aenne Brielmann:
     https://github.com/aenneb/test-aesthetic-value-model/blob/main/fitPilot.py
     https://github.com/aenneb/test-aesthetic-value-model/blob/main/analysis/d_fit_custom_model_ratings_cv.py
 
+finds values of k (P_switch) and Metrical contrast (spread) (along with scaling parameter m and b) 
+that minimize RMSE between delta suprisal and ratings per participant
 
-
+also generates per-participant predicted ratings for 9 rhythms used in original simulation  
 """
 
-import os
-os.chdir('C:\\Users\\Tomas\\Dropbox\\Aarhus\\PIPPET\\scripts')
+
 
 import numpy as np
 #import math
@@ -24,34 +25,36 @@ from scipy.optimize import minimize
 from deltaSurp_s import deltaSurp #
 from getStims import getStims
 
-#%% set directories;  load rating data or delta Surps for parameter recovery; load stims
+#%%-------------- 
+# set directories;  load rating data or delta Surps for parameter recovery; load stims
+#----------
 
-#os.chdir('..')
-#home_dir = os.getcwd()
-home_dir = 'C:\\Users\\Tomas\\Dropbox\\Aarhus\\PIPPET\\'
-#dataDir = home_dir + '/'
+home_dir = '...\\'
+
 
 recov = False
 
 if recov: #if doing parameter recovery 
-    #dfrecov = pd.read_csv(home_dir + 'results\\final_results\\final_predict\\simRecov_1.csv')
-    df1 = pd.read_csv(home_dir + 'results\\final_results\\final_predict\\predRatingsTM_4Free_raw.csv') #load sim ratings
+    
+    df1 = pd.read_csv(home_dir + '...') #load sim ratings
     participantList = list(df1.pID.unique())
 else: #otherwise load actual ratings
     
-    df = pd.read_csv(home_dir + 'GG_online_Study\\GG_DS_1\\df_60.csv')
+    df = pd.read_csv(home_dir + '...\\df_ratings.csv')
     
-    df1 = df.dropna(subset = 'move_ratings')#drop rows of missing ratings, for now
+    df1 = df.dropna(subset = 'move_ratings')#drop rows of missing ratings, if any
     
     participantList = list(df1.ID.unique())
 
 
 
 #get stims
-stims = pd.read_pickle(home_dir + 'groovegen_ds\\rhythmInfo_60.pkl')
+stims = pd.read_pickle(home_dir + '...\\rhythmInfo_60.pkl')
 
 
-#%% set fixed parameter; set bounds for optimization
+#%%-----------------
+# set fixed parameter; set bounds for optimization
+#------------
 
 #initialize k and spread to 'max' values
 #k = .01
@@ -93,7 +96,9 @@ bounds = tuple(bounds)
 
 nParams = len(bounds) 
 
-#%% unpack parameters (if not fitting all params)
+#%% --------------------
+# unpack parameters (if not fitting all params)
+#------------
 
 def unpackParams(parameters, fixParam):
     """
@@ -131,13 +136,13 @@ def unpackParams(parameters, fixParam):
         else:
             spread = parameters[paramsUsed-3]
         if 'm' in fixParam:
-            m = 37.98172 # median from init scaling fit on youngs, raw: results_TMyoung_initScale_raw.csv
+            m = 37.98172 # median from init scaling fit on previous ratings
            
             paramsUsed = paramsUsed - 1
         else:
             m = parameters[paramsUsed-2]
         if 'b' in fixParam:
-            b = 2.617817 #median from init scaling fit on youngs, raw
+            b = 2.617817 #median from init scaling fit on previous ratings
           
             paramsUsed = paramsUsed - 1
         else:
@@ -152,7 +157,9 @@ def unpackParams(parameters, fixParam):
 
     return k, spread, m, b
 
-#%% cost function
+#%% -------------------------
+# cost function
+#---------------------------
 
 def cost_fn(parameters,  data, rhythms, recov = False, allAtOnce = False):
     """
@@ -217,7 +224,9 @@ def cost_fn(parameters,  data, rhythms, recov = False, allAtOnce = False):
     return cost
 
 
-#%% parameter fitting
+#%% ------------------ 
+# parameter fitting
+#----------
 
 def paramFit(data, rhythms, nIter):
     
@@ -298,8 +307,6 @@ nIter = 5
 
 allAtOnce = False
 
-
-
 if allAtOnce: #if fitting all participants at once
     resDict = {'res': [], 'rmse_fit': [], 'rmse_pred': [], 'rhythms': []}
 
@@ -347,12 +354,14 @@ for i in range(len(resDf)):
     resDf['m'][i] = resDf.res.values[i].x[2]
     resDf['b'][i] = resDf.res.values[i].x[3]
 
-resDf.to_csv('C:\\Users\\Tomas\\Dropbox\\Aarhus\\PIPPET\\GG_online_study\GG_DS_1\\fit_results.csv')
+resDf.to_csv('...\\fit_results.csv')
 
 
-#%% generate per-Participant simMoveScores for orig 9 rhythms 
+#%% -----------------
+# generate per-Participant simMoveScores for orig 9 rhythms 
+# --------------------
 
-params  = pd.read_csv('C:\\Users\\Tomas\\Dropbox\\Aarhus\\PIPPET\\GG_online_study\\GG_DS_1\\fit_results.csv')
+params  = pd.read_csv('...\\fit_results.csv')
 
 
 stims = getStims(chords = True)
@@ -382,10 +391,8 @@ for row in params.index:
 
         dictList.append(pDict)        
 
-       
-
-
 dfsurps = pd.DataFrame(dictList)
 
-dfsurps.to_csv('C:\\Users\\Tomas\\Dropbox\\Aarhus\\PIPPET\\GG_online_study\\GG_DS_1\\predRatings_orig.csv')
+dfsurps.to_csv('...\\predRatings_orig.csv')
+
 
